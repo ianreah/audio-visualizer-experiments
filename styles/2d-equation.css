@@ -1,0 +1,14 @@
+﻿#visualisation {
+	width: 510px;
+	height: 510px;
+}
+
+canvas {
+    height: 255px;
+    width: 255px;
+	-webkit-box-reflect: below;
+}
+
+#duplicatedCanvas {
+	-webkit-transform: scaleX(-1);
+}
