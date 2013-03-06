@@ -1,14 +1,14 @@
-require(['jquery', 'jsFrames.min', 'AudioAnalyser'], function ($, jsFrames, audioAnalyser) {
+require(['jquery', 'AudioAnalyser'], function ($, audioAnalyser) {
 	if (audioAnalyser.supported === false) {
 		$(".hideIfNoApi").hide();
         $(".showIfNoApi").show();
         return;
     }
 
-    // Create the analyser
-	var analyser = audioAnalyser.fromMediaPlayer($("#player"), 32, 0.4);
-	var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    // Create the analyser & audio routing
+	audioAnalyser.fromMediaPlayer($("#player"), 32, 0.4);
 
+    // Set up the visualisation elements
     var canvas = $("#mainCanvas")[0];
     var canvasContext = canvas.getContext("2d");
 	var duplicateContext = $("#duplicatedCanvas")[0].getContext("2d");
@@ -16,13 +16,11 @@ require(['jquery', 'jsFrames.min', 'AudioAnalyser'], function ($, jsFrames, audi
     var imageData = canvasContext.createImageData(1, 1);
     var pixelData = imageData.data;
 
-    jsFrames.registerAnimation(function () {
-    	// Get the frequency data and update the visualisation
-    	analyser.getByteFrequencyData(frequencyData);
-		
+    // Subscribe to analyser updates
+    audioAnalyser.onAnalyserUpdate(function (e) {
 		var averagedData = new Array(0,0,0,0);
-		for(var index = 0; index < analyser.frequencyBinCount; index++) {
-			averagedData[Math.floor(index/4)] += (frequencyData[index]/4);
+		for (var index = 0; index < audioAnalyser.frequencyBinCount(); index++) {
+			averagedData[Math.floor(index/4)] += (e.frequencyData[index]/4);
 		}
 
 		// r,g,b from the higher 3 frequency bins
@@ -66,12 +64,4 @@ require(['jquery', 'jsFrames.min', 'AudioAnalyser'], function ($, jsFrames, audi
 		duplicateContext.clearRect(0, 0, 255, 255);
 		duplicateContext.drawImage(canvas, 0, 0);
     });
-
-    var theFpsDisplay = $('#fps');
-    jsFrames.onFpsUpdate(function (fps) {
-    	theFpsDisplay.html(fps);
-    });
-	
-    // Kick it off...
-	jsFrames.start();
 });

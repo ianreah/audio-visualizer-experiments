@@ -1,4 +1,4 @@
-﻿define([], function() {
+﻿define(['jquery', 'jsFrames.min'], function ($, jsFrames) {
 	// Future-proofing...
 	var context;
 	if (typeof AudioContext !== "undefined") {
@@ -7,11 +7,16 @@
 		context = new webkitAudioContext();
 	}
 
+	var pubsub = $({});
+	var updateEventName = "analyser.update";
+	var analyser;
+
 	return {
-		supported: context !== undefined,
+	    supported: context !== undefined,
+
 		fromMediaPlayer: function (mediaPlayer, fftSize, smoothingTimeConstant) {
 			// Create the analyser
-			var analyser = context.createAnalyser();
+			analyser = context.createAnalyser();
 			
 			if (fftSize !== undefined) {
 				analyser.fftSize = fftSize;
@@ -30,7 +35,26 @@
 				analyser.connect(context.destination);
 			});
 
-			return analyser;
+			var updateEvent = jQuery.Event(updateEventName);
+			updateEvent.frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+			jsFrames.registerAnimation(function () {
+			    // Get the frequency data and trigger an update
+			    analyser.getByteFrequencyData(updateEvent.frequencyData);
+			    pubsub.trigger(updateEvent);
+			});
+
+		    // TODO: subscribe to frames per second
+
+			jsFrames.start();
+		},
+
+		onAnalyserUpdate: function (update) {
+		    pubsub.bind(updateEventName, update);
+		},
+
+		frequencyBinCount: function () {
+		    return analyser.frequencyBinCount;
 		}
 	};
 });
