@@ -1,21 +1,13 @@
-require(['jquery', 'jsFrames.min'], function ($, jsFrames) {
-	// Future-proofing...
-    var context;
-    if (typeof AudioContext !== "undefined") {
-        context = new AudioContext();
-    } else if (typeof webkitAudioContext !== "undefined") {
-        context = new webkitAudioContext();
-    } else {
-        $(".hideIfNoApi").hide();
+require(['jquery', 'jsFrames.min', 'AudioAnalyser'], function ($, jsFrames, audioAnalyser) {
+	if (audioAnalyser.supported === false) {
+		$(".hideIfNoApi").hide();
         $(".showIfNoApi").show();
         return;
     }
 
     // Create the analyser
-    var analyser = context.createAnalyser();
-    analyser.fftSize = 32;
-	analyser.smoothingTimeConstant = 0.4;
-    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+	var analyser = audioAnalyser.fromMediaPlayer($("#player"), 32, 0.4);
+	var frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
     var canvas = $("#mainCanvas")[0];
     var canvasContext = canvas.getContext("2d");
@@ -79,15 +71,6 @@ require(['jquery', 'jsFrames.min'], function ($, jsFrames) {
     jsFrames.onFpsUpdate(function (fps) {
     	theFpsDisplay.html(fps);
     });
-	
-    // Hook up the audio routing...
-    // player -> analyser -> speakers
-	// (Do this after the player is ready to play - https://code.google.com/p/chromium/issues/detail?id=112368#c4)
-	$("#player").bind('canplay', function() {
-		var source = context.createMediaElementSource(this);
-		source.connect(analyser);
-		analyser.connect(context.destination);
-	});
 	
     // Kick it off...
 	jsFrames.start();
