@@ -33,6 +33,11 @@ require(['jquery', 'jsFrames.min'], function ($, jsFrames) {
         });
     });
 
+    var theFpsDisplay = $('#fps');
+    jsFrames.onFpsUpdate(function (fps) {
+    	theFpsDisplay.html(fps);
+    });
+	
     // Hook up the audio routing...
     // player -> analyser -> speakers
 	// (Do this after the player is ready to play - https://code.google.com/p/chromium/issues/detail?id=112368#c4)
