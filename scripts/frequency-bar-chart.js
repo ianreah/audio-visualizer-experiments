@@ -1,4 +1,4 @@
-define(['jquery', 'jsFrames.min'], function ($, jsFrames) {
+require(['jquery', 'jsFrames.min'], function ($, jsFrames) {
     // Future-proofing...
     var context;
     if (typeof AudioContext !== "undefined") {
