@@ -11,6 +11,14 @@
 	var updateEventName = "analyser.update";
 	var analyser;
 
+	// Hook up the audio routing...
+	// player -> analyser -> speakers
+	function hookUpAudioRouting(player) {
+		var source = context.createMediaElementSource(player);
+		source.connect(analyser);
+		analyser.connect(context.destination);
+	}
+	
 	return {
 	    supported: context !== undefined,
 
@@ -26,14 +34,15 @@
 				analyser.smoothingTimeConstant = smoothingTimeConstant;
 			}
 			
-			// Hook up the audio routing...
-			// player -> analyser -> speakers
-			// (Do this after the player is ready to play - https://code.google.com/p/chromium/issues/detail?id=112368#c4)
-			mediaPlayer.bind('canplay', function () {
-				var source = context.createMediaElementSource(this);
-				source.connect(analyser);
-				analyser.connect(context.destination);
-			});
+			// Do this after the player is ready to play - https://code.google.com/p/chromium/issues/detail?id=112368#c4
+			if (mediaPlayer[0].readyState > 2) {
+				// We may have missed the canplay event already
+				hookUpAudioRouting(mediaPlayer[0]);
+			} else {
+				mediaPlayer.bind('canplay', function() {
+					hookUpAudioRouting(this);
+				});
+			}
 
 			var updateEvent = jQuery.Event(updateEventName);
 			updateEvent.frequencyData = new Uint8Array(analyser.frequencyBinCount);
