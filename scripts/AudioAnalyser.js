@@ -64,6 +64,12 @@
 
 		frequencyBinCount: function () {
 		    return analyser.frequencyBinCount;
+		},
+	    
+		displayFps: function(element) {
+			jsFrames.onFpsUpdate(function (fps) {
+				element.html(fps);
+			});
 		}
 	};
 });

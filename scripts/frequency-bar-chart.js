@@ -22,4 +22,6 @@ require(['jquery', 'AudioAnalyser'], function ($, audioAnalyser) {
             bar.style.height = e.frequencyData[index] + 'px';
         });
     });
+
+	audioAnalyser.displayFps($('#fps'));
 });

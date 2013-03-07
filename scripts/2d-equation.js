@@ -64,4 +64,6 @@ require(['jquery', 'AudioAnalyser'], function ($, audioAnalyser) {
 		duplicateContext.clearRect(0, 0, 255, 255);
 		duplicateContext.drawImage(canvas, 0, 0);
     });
+	
+    audioAnalyser.displayFps($('#fps'));
 });
