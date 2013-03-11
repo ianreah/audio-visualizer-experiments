@@ -1,12 +1,26 @@
-require(['jquery', 'AudioAnalyser'], function ($, audioAnalyser) {
-	if(audioAnalyser.supported === false) {
+require(['AudioAnalyser', 'jquery', 'jquery-ui.tabs'], function (audioAnalyser, $) {
+    if (audioAnalyser.supported === false) {
         $(".hideIfNoApi").hide();
         $(".showIfNoApi").show();
         return;
-    }
-
-    // Create the analyser & audio routing
-	audioAnalyser.fromMediaPlayer($("#player"), 64);
+	}
+	
+    $("#tabs").tabs({
+    	beforeActivate: function (event, ui) {
+    		switch (ui.newTab.index()) {
+    			case 0:
+    				audioAnalyser.fromMediaPlayer();
+    				break;
+    			case 1:
+    				audioAnalyser.fromLocalSource();
+    				break;
+    		}
+    	}
+    });
+	
+	// Create the analyser & audio routing
+    audioAnalyser.initialise($("#player"), 64);
+	audioAnalyser.fromMediaPlayer();
 	
 	// Set up the visualisation elements
     var visualisation = $("#visualisation");

@@ -11,51 +11,77 @@
 	var updateEventName = "analyser.update";
 	var analyser;
 
-	// Hook up the audio routing...
-	// player -> analyser -> speakers
-	function hookUpAudioRouting(player) {
-		var source = context.createMediaElementSource(player);
-		source.connect(analyser);
-		analyser.connect(context.destination);
-	}
-	
+	var player;
+	var streamingSource;
+	var localSource;
+
 	return {
 	    supported: context !== undefined,
 
-		fromMediaPlayer: function (mediaPlayer, fftSize, smoothingTimeConstant) {
-			// Create the analyser
-			analyser = context.createAnalyser();
-			
-			if (fftSize !== undefined) {
-				analyser.fftSize = fftSize;
-			}
-			
-			if (smoothingTimeConstant !== undefined) {
-				analyser.smoothingTimeConstant = smoothingTimeConstant;
-			}
-			
+	    initialise: function (mediaPlayer, fftSize, smoothingTimeConstant) {
+	    	player = mediaPlayer;
+		    
+	        // Create the analyser
+	        analyser = context.createAnalyser();
+
+	        if (fftSize !== undefined) {
+	            analyser.fftSize = fftSize;
+	        }
+
+	        if (smoothingTimeConstant !== undefined) {
+	            analyser.smoothingTimeConstant = smoothingTimeConstant;
+	        }
+
+	        var updateEvent = jQuery.Event(updateEventName);
+	        updateEvent.frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+	        jsFrames.registerAnimation(function () {
+	            // Get the frequency data and trigger an update
+	            analyser.getByteFrequencyData(updateEvent.frequencyData);
+	            pubsub.trigger(updateEvent);
+	        });
+
+	        jsFrames.start();
+	    },
+
+	    fromMediaPlayer: function () {
+	        if (localSource) {
+	            localSource.disconnect();
+	        }
+
+	    	// Hook up the audio routing...
+	    	// player -> analyser -> speakers
+	        function hookUpAudioRouting() {
+	        	streamingSource = streamingSource || context.createMediaElementSource(player[0]);
+	        	streamingSource.connect(analyser);
+	        	analyser.connect(context.destination);
+	        }
+
 			// Do this after the player is ready to play - https://code.google.com/p/chromium/issues/detail?id=112368#c4
-			if (mediaPlayer[0].readyState > 2) {
+			if (player[0].readyState > 2) {
 				// We may have missed the canplay event already
-				hookUpAudioRouting(mediaPlayer[0]);
+				hookUpAudioRouting();
 			} else {
-				mediaPlayer.bind('canplay', function() {
-					hookUpAudioRouting(this);
+				player.bind('canplay', function () {
+					hookUpAudioRouting();
 				});
 			}
+		},
 
-			var updateEvent = jQuery.Event(updateEventName);
-			updateEvent.frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
-			jsFrames.registerAnimation(function () {
-			    // Get the frequency data and trigger an update
-			    analyser.getByteFrequencyData(updateEvent.frequencyData);
-			    pubsub.trigger(updateEvent);
-			});
+		fromLocalSource: function () {
+		    if (streamingSource) {
+		        streamingSource.disconnect();
+		    }
 
-		    // TODO: subscribe to frames per second
-
-			jsFrames.start();
+			if (localSource) {
+				localSource.connect(analyser);
+			} else {
+				navigator.webkitGetUserMedia({ audio: true }, function(stream) {
+					localSource = context.createMediaStreamSource(stream);
+					localSource.connect(analyser);
+				});
+			}
 		},
 
 		onAnalyserUpdate: function (update) {
