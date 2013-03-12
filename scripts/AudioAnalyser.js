@@ -71,17 +71,14 @@
 
 		fromLocalSource: function () {
 		    if (streamingSource) {
-		        streamingSource.disconnect();
+		    	streamingSource.disconnect();
+			    analyser.disconnect();
 		    }
 
-			if (localSource) {
+			navigator.webkitGetUserMedia({ audio: true }, function(stream) {
+				localSource = context.createMediaStreamSource(stream);
 				localSource.connect(analyser);
-			} else {
-				navigator.webkitGetUserMedia({ audio: true }, function(stream) {
-					localSource = context.createMediaStreamSource(stream);
-					localSource.connect(analyser);
-				});
-			}
+			});
 		},
 
 		onAnalyserUpdate: function (update) {
