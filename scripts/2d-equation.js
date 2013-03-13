@@ -11,19 +11,14 @@ define(['AudioAnalyser', 'jquery'], function (audioAnalyser, $) {
 
 			// Subscribe to analyser updates
 			audioAnalyser.onAnalyserUpdate(function (e) {
-				var averagedData = new Array(0, 0, 0, 0);
-				for (var index = 0; index < audioAnalyser.frequencyBinCount() ; index++) {
-					averagedData[Math.floor(index / 4)] += (e.frequencyData[index] / 4);
-				}
-
 				// r,g,b from the higher 3 frequency bins
 				// scaled 127 - 255 to keep it bright
-				pixelData[0] = averagedData[1] / 2 + 127;
-				pixelData[1] = averagedData[2] / 2 + 127;
-				pixelData[2] = averagedData[3] / 2 + 127;
+				pixelData[0] = e.frequencyData[4] / 2 + 127;
+				pixelData[1] = e.frequencyData[8] / 2 + 127;
+				pixelData[2] = e.frequencyData[12] / 2 + 127;
 
 				// Taken from here - http://ejohn.org/apps/processing.js/examples/basic/graphing2dequation.html
-				var n = (averagedData[0] * 10.0) / 255;
+				var n = (e.frequencyData[0] * 10.0) / 255;
 				var w = 16.0;      // 2D space width
 				var h = 16.0;      // 2D space height
 				var dx = w / 255;  // Increment x this amount per pixel
