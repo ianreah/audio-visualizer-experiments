@@ -78,6 +78,8 @@
 			navigator.webkitGetUserMedia({ audio: true }, function(stream) {
 				localSource = context.createMediaStreamSource(stream);
 				localSource.connect(analyser);
+			}, function(err) {
+				console.log("The following error occured: " + err);
 			});
 		},
 
